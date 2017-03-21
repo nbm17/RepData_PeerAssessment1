@@ -7,11 +7,11 @@ output: html_document
 
 #This is the markdown document for Reproducible Research - Project 1.
 
-###Loading and preprocessing the data
+##Loading and preprocessing the data
 ```{r}
 tempfile <-"data.zip"
     if(!file.exists(tempfile)){
-      fileUrl <- "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"  
+      fileUrl <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"  
       download.file(fileUrl,tempfile)  
     }
 if(!file.exists("activity.csv")){
@@ -22,19 +22,55 @@ df$date<-as.Date(as.character(df$date),format="%Y-%m-%d")
 echo=TRUE
 ```
 
-###What is mean total number of steps taken per day?
+##What is mean total number of steps taken per day?
+#### This histogram shows the total number of steps taken per day  
 ```{r}
 agg<-aggregate(df$steps, by=list(df$date),FUN=sum,na.rm=TRUE)
 hist(agg$x, main = "Activity",xlab="Number of steps taken each day")
+```
 
-stepdaymean<-mean(agg$x)
-stepdaymedian<-median(agg$x)
-stepdaymean
-stepdaymedian
+#### The mean total number of steps per day is:
+```{r}
+mean(agg$x, na.rm=TRUE)
+```
+#### The median total number of steps per day is:
+```{r}
+median(agg$x, na.rm=TRUE)
 ```
 
 ###What is the average daily activity pattern?
 ```{r}
 agg2<-aggregate(df$steps, by=list(df$interval),FUN=mean, na.rm=TRUE)
-plot(agg2$Group.1, agg2$x, type="l",col="red", main="Activity",xlab="Interval",ylab="Average Steps")
+colnames(agg2)<-c("interval","steps")
+plot(agg2$interval, agg2$steps, type="l",col="red", main="Activity",xlab="Interval",ylab="Average Steps")
+```
+
+####The maximum number of steps taken per interval is:
+```{r}
+subset(agg2,agg2$steps==max(agg2$steps))
+```
+
+##Imputing missing values
+
+####How many missing values are in the dataset?
+```{r}
+nrow(subset(df,is.na(df$steps)==TRUE))
+```
+
+####Fill the missing values with mean of the same interval
+```{r}
+getIntervalValue<-function(interval){
+  IV<-NULL
+  IV<-agg2[agg2$interval==interval,]$steps
+  return(IV)
+}
+
+
+df.replaced.na<-df
+for(i in 1:nrow(df.replaced.na)){
+  if(is.na(df.replaced.na[i,]$steps)){
+    df.replaced.na[i,]$steps<-getIntervalValue(df.replaced.na[i,]$interval)
+  }
+}
+
 ```
